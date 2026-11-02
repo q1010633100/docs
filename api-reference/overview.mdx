@@ -1,0 +1,58 @@
+---
+title: Orders API
+description: 示例订单接口的请求、响应和错误码
+---
+
+## 创建订单
+
+`POST /v1/orders`
+
+创建一笔订单。所有金额均使用目标货币的最小单位，例如人民币分。
+
+### 请求参数
+
+<ParamField body="amount" type="integer" required>
+  订单金额，必须为正整数。示例：19900。
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  三位 ISO 4217 货币代码，当前示例使用 CNY。
+</ParamField>
+
+<ParamField body="reference" type="string" required>
+  商户侧唯一订单号，长度建议不超过 64 个字符。
+</ParamField>
+
+### 响应字段
+
+<ResponseField name="id" type="string" required>
+  服务端生成的订单唯一标识。
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  订单状态，可选值为 created、paid、cancelled。
+</ResponseField>
+
+## 查询订单
+
+`GET /v1/orders/{order_id}`
+
+<ParamField path="order_id" type="string" required>
+  创建订单时返回的订单 ID。
+</ParamField>
+
+```bash
+curl https://api.example.com/v1/orders/ord_01J5K7N3M8Q2X4V6 \
+  --header "Authorization: Bearer $ORBIT_API_KEY"
+```
+
+## 错误码
+
+| HTTP 状态码 | 错误类型 | 处理建议 |
+| --- | --- | --- |
+| 400 | `invalid_request` | 检查请求体和字段格式 |
+| 401 | `unauthorized` | 检查密钥和 Authorization 请求头 |
+| 404 | `order_not_found` | 检查订单 ID |
+| 409 | `duplicate_reference` | 查询已有订单，避免重复创建 |
+| 429 | `rate_limit_exceeded` | 使用指数退避后重试 |
+| 500 | `internal_error` | 保留请求 ID 并联系技术支持 |

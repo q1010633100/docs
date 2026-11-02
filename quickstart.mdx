@@ -1,47 +1,88 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: 快速开始
+description: 使用 cURL、JavaScript 或 Python 发送第一个示例请求
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+本指南演示典型的 API 接入流程。示例接口不会真实执行，请将其替换为你自己的服务地址。
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="准备访问密钥">
+    在服务端环境变量中保存密钥，不要将密钥写入浏览器代码或提交到 Git。
 
     ```bash
-    npm install your-package
+    export ORBIT_API_KEY="test_sk_replace_me"
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+  <Step title="创建订单">
+    向示例服务发送一个包含金额和货币种类的 POST 请求。
 
-    ```bash
-    your-cli init
-    ```
+    <CodeGroup>
+      ```bash cURL
+      curl --request POST https://api.example.com/v1/orders \
+        --header "Authorization: Bearer $ORBIT_API_KEY" \
+        --header "Content-Type: application/json" \
+        --data '{
+          "amount": 19900,
+          "currency": "CNY",
+          "reference": "ORDER-2026-001"
+        }'
+      ```
+
+      ```javascript JavaScript
+      const response = await fetch('https://api.example.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.ORBIT_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: 19900,
+          currency: 'CNY',
+          reference: 'ORDER-2026-001'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      const order = await response.json();
+      console.log(order.id);
+      ```
+
+      ```python Python
+      import os
+      import requests
+
+      response = requests.post(
+          "https://api.example.com/v1/orders",
+          headers={"Authorization": f"Bearer {os.environ['ORBIT_API_KEY']}"},
+          json={
+              "amount": 19900,
+              "currency": "CNY",
+              "reference": "ORDER-2026-001",
+          },
+          timeout=10,
+      )
+      response.raise_for_status()
+      print(response.json()["id"])
+      ```
+    </CodeGroup>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="处理响应">
+    成功时，服务返回订单 ID 和当前状态。生产环境应同时处理网络错误、超时和非 2xx 响应。
 
-    ```bash
-    your-cli start
+    ```json
+    {
+      "id": "ord_01J5K7N3M8Q2X4V6",
+      "amount": 19900,
+      "currency": "CNY",
+      "status": "created"
+    }
     ```
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  建议为每个请求生成唯一的 Idempotency-Key，避免网络重试造成重复订单。
 </Tip>
